@@ -8,7 +8,7 @@ namespace BulkyWeb.Controllers
     {
         private readonly ApplicationDbContext _db;
 
-        public CategoryController(ApplicationDbContext db) 
+        public CategoryController(ApplicationDbContext db)
         {
             _db = db;
         }
@@ -24,9 +24,79 @@ namespace BulkyWeb.Controllers
         [HttpPost]
         public IActionResult Create(Category obj)
         {
-            _db.Categories.Add(obj);
+            if (obj.Name == obj.DisplayOrder.ToString())
+            {
+                ModelState.AddModelError("Name", "The DisplayOrder can NOT exactly match the Name!");
+            }
+            //if (obj.Name != null && obj.Name.ToLower() == "test")
+            //{
+            //    ModelState.AddModelError("", "Test is an invalide value!");
+            //}
+            if (ModelState.IsValid)
+            {
+                _db.Categories.Add(obj);
+                _db.SaveChanges();
+                TempData["success"] = "Category created successfuly!";
+                //return RedirectToAction("Index", "Category"); redirect to any other controller
+                return RedirectToAction("Index");
+            }
+            return View();
+        }
+
+        public IActionResult Edit(int? id)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+            // Category? categoryFromDb = _db.Categories.FirstOrDefault(c => c.Id == id);
+            // Category? categoryFromDb = _db.Categories.Where(c => c.Id == id).FirstOrDefault();
+            Category? categoryFromDb = _db.Categories.Find(id);
+            if (categoryFromDb == null)
+            {
+                return NotFound();
+            }
+            return View(categoryFromDb);
+        }
+        [HttpPost]
+        public IActionResult Edit(Category obj)
+        {
+            
+            if (ModelState.IsValid)
+            {
+                _db.Categories.Update(obj);
+                _db.SaveChanges();
+                TempData["success"] = "Category updated successfuly!";
+                //return RedirectToAction("Index", "Category"); redirect to any other controller
+                return RedirectToAction("Index");
+            }
+            return View();
+        }
+
+        public IActionResult Delete(int? id)
+        {
+            if (id == null || id == 0)
+            {
+                return NotFound();
+            }
+            Category? categoryFromDb = _db.Categories.Find(id);
+            if (categoryFromDb == null)
+            {
+                return NotFound();
+            }
+            return View(categoryFromDb);
+        }
+        [HttpPost, ActionName("Delete")]
+        public IActionResult DeletePost(int? id)
+        {
+            Category? obj = _db.Categories.Find(id); 
+            if (obj == null)
+            {
+                return NotFound();
+            }
+            _db.Categories.Remove(obj);
             _db.SaveChanges();
-            //return RedirectToAction("Index", "Category");
+            TempData["success"] = "Category deleted successfuly!";
             return RedirectToAction("Index");
         }
     }
